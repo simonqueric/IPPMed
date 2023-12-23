@@ -2,11 +2,19 @@ import nibabel as nib
 import os
 import torch
 from torch.utils.data import Dataset
+import numpy as np
+
+def rescale_image(image, a=0, b=1):
+    min_val = np.min(image)
+    max_val = np.max(image)
+
+    rescaled_image = a + ((image - min_val) * (b - a)) / (max_val - min_val)
+
+    return rescaled_image
 
 
-
-class IPPMedDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+class IPPMedDataset_2D(Dataset):
+    def __init__(self, root_dir, transform=rescale_image):
         self.root_dir = root_dir
         vol_dir = os.path.join(root_dir, 'slice_vol')
         self.vol_paths = [os.path.join(vol_dir, vol_path) for vol_path in os.listdir(vol_dir)]        
@@ -27,6 +35,6 @@ class IPPMedDataset(Dataset):
 
         if self.transform:
             vol_img = self.transform(vol_img)
-            seg_img = self.transform(seg_img)
+            
 
         return torch.from_numpy(vol_img).to(torch.float32).unsqueeze(0), torch.from_numpy(seg_img).to(torch.float32).unsqueeze(0)
