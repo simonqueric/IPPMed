@@ -67,7 +67,7 @@ if __name__=="__main__" :
     
     x, y = next(iter(data_train_loader))
     print(x.max())
-    file_checkpoint = "checkpoint_unet2d_relu_lr=1e-4_rescale_t=0.5_adam_20_epochs_batch=16_reduce_scheduler.pth"
+    file_checkpoint = "checkpoints/checkpoint_unet2d_relu_lr=1e-4_rescale_t=0.5_adam_20_epochs_batch=16_reduce_scheduler.pth"
     print(file_checkpoint)
     #model = UNet3D(1, 1).to(device)    
     #print(model(x.to(device)).shape)
