@@ -16,7 +16,7 @@ class conv_block(nn.Module):
         self.conv2 = nn.Conv2d(out_c, out_c, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(out_c)
 
-        self.elu = nn.ELU()
+        self.elu = nn.ReLU(inplace=True)
 
     def forward(self, inputs):
         x = self.conv1(inputs)
@@ -97,6 +97,75 @@ class UNet(nn.Module):
 
         return outputs
 
+class UNet3D(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(UNet3D, self).__init__()
+        
+        # Contracting Path
+        self.conv1 = self.conv_block(in_channels, 64)
+        self.conv2 = self.conv_block(64, 128)
+        self.conv3 = self.conv_block(128, 256)
+        self.conv4 = self.conv_block(256, 512)
+
+        # Bottleneck
+        self.bottleneck = self.conv_block(512, 512)
+
+        # Expansive Path
+        self.upconv4 = self.upconv_block(512, 256)
+        self.upconv3 = self.upconv_block(256, 128)
+        self.upconv2 = self.upconv_block(128, 64)
+
+        # Output layer
+        self.output_layer = nn.Conv3d(64, out_channels, kernel_size=1)
+        self.dropout = nn.Dropou(p=0.2)
+
+    def conv_block(self, in_channels, out_channels):
+        return nn.Sequential(
+            nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True)
+        )
+
+    def upconv_block(self, in_channels, out_channels):
+        return nn.Sequential(
+            nn.ConvTranspose3d(in_channels, out_channels, kernel_size=2, stride=2),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        # Contracting Path
+        conv1 = self.conv1(x)
+        pool1 = F.max_pool3d(conv1, 2)
+
+        conv2 = self.conv2(pool1)
+        pool2 = F.max_pool3d(conv2, 2)
+
+        conv3 = self.conv3(pool2)
+        pool3 = F.max_pool3d(conv3, 2)
+
+        conv4 = self.conv4(pool3)
+        pool4 = F.max_pool3d(conv4, 2)
+
+        # Bottleneck
+        bottleneck = self.bottleneck(pool4)
+
+        # Expansive Path
+        upconv4 = self.upconv4(bottleneck)
+        concat4 = torch.cat([upconv4, conv4], dim=1)
+
+        upconv3 = self.upconv3(concat4)
+        concat3 = torch.cat([upconv3, conv3], dim=1)
+
+        upconv2 = self.upconv2(concat3)
+        concat2 = torch.cat([upconv2, conv2], dim=1)
+
+        # Output layer
+        output = self.output_layer(concat2)
+        #output = self.dropout(output)
+        return output
+
 if __name__=="__main__":
     model = UNet()
     print(model)
+
