@@ -81,3 +81,5 @@ for epoch in range(num_epochs):
     print(f'Epoch {epoch + 1}, Loss: {running_loss / len(dataloader)}')
 
 print('Finished Training')
+
+torch.save(model.state_dict(), "/home/ids/ext-6398/Competition/IPPMed/3D-UNet/model_weights")
