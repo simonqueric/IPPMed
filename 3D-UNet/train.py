@@ -36,7 +36,7 @@ dataloader = CustomDataset(data_dir)
 
 IN_CHANNELS = 1
 NUM_CLASSES = 1
-num_epochs = 1
+num_epochs = 100
 
 if torch.cuda.is_available():
     model = model.cuda()
