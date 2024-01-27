@@ -5,6 +5,7 @@ Author: Amir Aghdam
 """
 
 from torch import nn
+from torchsummary import summary
 import torch
 import time
 
@@ -43,6 +44,7 @@ class Conv3DBlock(nn.Module):
         else:
             out = res
         return out, res
+
 
 
 
@@ -127,11 +129,7 @@ class UNet3D(nn.Module):
 
 if __name__ == '__main__':
     #Configurations according to the Xenopus kidney dataset
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    model = UNet3D(in_channels=1, num_classes=1).to(device)
+    model = UNet3D(in_channels=3, num_classes=1)
     start_time = time.time()
-    input_data = torch.randn((1, 1, 512, 512, 32)).to(device)
-    pred = model(input_data)
-    print(pred.shape)
+    summary(model=model, input_size=(3, 16, 128, 128), batch_size=-1, device="cpu")
     print("--- %s seconds ---" % (time.time() - start_time))
