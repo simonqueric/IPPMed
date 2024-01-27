@@ -6,4 +6,4 @@
 #SBATCH --time=0-22:00:00     
 #SBATCH --gpus=1
 
-python3 main.py
+python3 ./3D-UNet/train.py
