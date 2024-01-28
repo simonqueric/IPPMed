@@ -1,5 +1,6 @@
 from unet3d import *
 from dataset import *
+from transforms import *
 import torch
 import os
 from torch.utils.data import Dataset, DataLoader
@@ -36,21 +37,26 @@ dataloader = CustomDataset(data_dir)
 
 IN_CHANNELS = 1
 NUM_CLASSES = 1
-num_epochs = 100
+N_EPOCHS = 1
+BATCH_SIZE = 1
+
+model = UNet3D(in_channels = IN_CHANNELS, num_classes = NUM_CLASSES)
 
 if torch.cuda.is_available():
+    print("cuda available")
     model = model.cuda()
     train_transforms = train_transform_cuda
     val_transforms = val_transform_cuda
+    device = "cuda"
 elif not torch.cuda.is_available():
     print('cuda not available! Training initialized on cpu ...')
-
+    device = "cpu"
 # Define loss function and optimizer
 criterion = nn.MSELoss()  # Example loss function, replace with appropriate loss function
 optimizer = optim.Adam(model.parameters(), lr=0.001)  # Example optimizer, adjust learning rate as needed
 
 # Assuming you have a DataLoader named 'dataloader' as defined earlier
-for epoch in range(num_epochs):
+for epoch in range(N_EPOCHS):
     running_loss = 0.0
 
         # Iterate over the data loader
@@ -59,9 +65,9 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         # Assuming data shape is [batch_size, depth, height, width]
-        lung_segmentations = lung_segmentations.unsqueeze(0).unsqueeze(0)  # Add channel dimension
-        tumor_masks = tumor_masks.unsqueeze(0).unsqueeze(0)
-        scan_volumes = scan_volumes.unsqueeze(0).unsqueeze(0)
+        lung_segmentations = lung_segmentations.unsqueeze(0).unsqueeze(0).to(device)  # Add channel dimension
+        tumor_masks = tumor_masks.unsqueeze(0).unsqueeze(0).to(device)
+        scan_volumes = scan_volumes.unsqueeze(0).unsqueeze(0).to(device)
 
         # Forward pass
         outputs = model(scan_volumes)
