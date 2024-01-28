@@ -7,37 +7,27 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 import numpy as np
 import nibabel as nib  # Assuming you're working with medical imaging data, you may need nibabel for reading NIfTI files
+import torch.nn.functional as F
 
+def dice_loss(predicted, target, smooth=1e-6):
+    intersection = torch.sum(predicted * target)
+    cardinality = torch.sum(predicted) + torch.sum(target)
+    dice = (2. * intersection + smooth) / (cardinality + smooth)
+    return 1. - dice
+
+def combined_loss(predicted, target, alpha=0.5, smooth=1e-6):
+    bce = F.binary_cross_entropy_with_logits(predicted, target)
+    dice = dice_loss(torch.sigmoid(predicted), target, smooth)
+    combined = alpha * bce + (1 - alpha) * dice
+    return combined
 # Path to the directory containing the data
-data_dir = '/home/ids/ext-6398/Competition/data_challenge/train'
-
-# Create an empty list to store file paths
-file_list = []
-
-# Iterate through the lung segmentation directory
-lung_seg_dir = os.path.join(data_dir, 'lungs_seg')
-for filename in os.listdir(lung_seg_dir):
-    if filename.endswith('.nii.gz'):
-        lung_seg_path = os.path.join(lung_seg_dir, filename)
-        
-        # Extract the corresponding tumor mask and scan volume filenames
-        base_filename = filename.split('_lungseg.nii.gz')[0]
-        tumor_mask_path = os.path.join(data_dir, 'seg', base_filename + '_seg.nii.gz')
-        scan_volume_path = os.path.join(data_dir, 'volume', base_filename + '_vol.nii.gz')
-
-        # Check if tumor mask and scan volume files exist
-        if os.path.exists(tumor_mask_path) and os.path.exists(scan_volume_path):
-            file_list.append({
-                'lung_segmentation': lung_seg_path,
-                'tumor_mask': tumor_mask_path,
-                'scan_volume': scan_volume_path
-            })
+data_dir = '/home/infres/ext-6398/data_challenge/train'
 
 dataloader = CustomDataset(data_dir)
 
 IN_CHANNELS = 1
 NUM_CLASSES = 1
-N_EPOCHS = 1
+N_EPOCHS = 30
 BATCH_SIZE = 1
 
 model = UNet3D(in_channels = IN_CHANNELS, num_classes = NUM_CLASSES)
@@ -52,29 +42,46 @@ elif not torch.cuda.is_available():
     print('cuda not available! Training initialized on cpu ...')
     device = "cpu"
 # Define loss function and optimizer
-criterion = nn.MSELoss()  # Example loss function, replace with appropriate loss function
-optimizer = optim.Adam(model.parameters(), lr=0.001)  # Example optimizer, adjust learning rate as needed
+optimizer = optim.Adam(model.parameters(), lr=0.002)  # Example optimizer, adjust learning rate as needed
 
 # Assuming you have a DataLoader named 'dataloader' as defined earlier
 for epoch in range(N_EPOCHS):
     running_loss = 0.0
 
         # Iterate over the data loader
-    for lung_segmentations, tumor_masks, scan_volumes in dataloader:
+    for i,(lung_segmentations, tumor_masks, scan_volumes) in enumerate(dataloader):
         # Zero the parameter gradients
         optimizer.zero_grad()
 
         # Assuming data shape is [batch_size, depth, height, width]
-        lung_segmentations = lung_segmentations.unsqueeze(0).unsqueeze(0).to(device)  # Add channel dimension
-        tumor_masks = tumor_masks.unsqueeze(0).unsqueeze(0).to(device)
-        scan_volumes = scan_volumes.unsqueeze(0).unsqueeze(0).to(device)
+        w = np.min([tumor_masks.shape[2], lung_segmentations.shape[2], scan_volumes.shape[2]])
+        tm_size = tumor_masks.shape[2]
+        size = 2
+        while(2*size <= w and size <= 128):
+            size = 2*size
+        print(size)
+        if size<64:
+            continue
+        # Define the size of the subcube
+        m = 320
+
+        # Calculate starting and ending indices for extraction
+        start_idx = (512 - m) // 2
+        end_idx = start_idx + m
+        
+
+        lung_segmentations = lung_segmentations[start_idx:end_idx,start_idx:end_idx,:size].unsqueeze(0).unsqueeze(0).to(device)  # Add channel dimension
+        tumor_masks = tumor_masks.to(device)
+        scan_volumes = scan_volumes[start_idx:end_idx,start_idx:end_idx,:size].unsqueeze(0).unsqueeze(0).to(device)
 
         # Forward pass
-        outputs = model(scan_volumes)
-
+        output = model(scan_volumes)
+        print(output.shape)
+        pred = torch.zeros((512, 512, tm_size)).to(device)
+        pred[start_idx:end_idx,start_idx:end_idx,:size] = output[0,0,:,:,:]
         # Compute the loss
-        loss = criterion(outputs, tumor_masks)
-
+        loss = combined_loss(pred, tumor_masks)
+        print(f"image {i} loss : {loss}")
         # Backward pass and optimize
         loss.backward()
         optimizer.step()
@@ -85,7 +92,7 @@ for epoch in range(N_EPOCHS):
 
     # Print epoch statistics
     print(f'Epoch {epoch + 1}, Loss: {running_loss / len(dataloader)}')
-
+    torch.save(model.state_dict(), "/home/infres/ext-6398/3D-UNet/model_weights")
 print('Finished Training')
 
-torch.save(model.state_dict(), "/home/ids/ext-6398/Competition/IPPMed/3D-UNet/model_weights")
+torch.save(model.state_dict(), "/home/infres/ext-6398/3D-UNet/model_weights")

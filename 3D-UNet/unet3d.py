@@ -77,13 +77,21 @@ class UpConv3DBlock(nn.Module):
         
     def forward(self, input, residual=None):
         out = self.upconv1(input)
-        if residual!=None: out = torch.cat((out, residual), 1)
+        if residual is not None:
+            # Perform any necessary operations to match the size of 'out'
+            residual = self.adjust_size(residual, out.shape[2:])
+            out = torch.cat((out, residual), 1)
         out = self.relu(self.bn(self.conv1(out)))
         out = self.relu(self.bn(self.conv2(out)))
         if self.last_layer: out = self.conv3(out)
         return out
         
-
+    def adjust_size(self, tensor, target_size):
+        # Adjust the size of 'tensor' to match 'target_size'
+        # You can use interpolation, cropping, padding, or any other technique here
+        # Example: using torch.nn.functional.interpolate for resizing
+        tensor = nn.functional.interpolate(tensor, size=target_size, mode='trilinear', align_corners=False)
+        return tensor
 
 
 class UNet3D(nn.Module):
