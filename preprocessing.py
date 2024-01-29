@@ -60,7 +60,7 @@ for i, (x, y) in enumerate(zip(liste_vol, liste_seg)):
     else : 
         u = np.random.uniform(0, 1)
         if u<=.5 :
-            shutil.copy(slice_dir+x, "data/train/Xtrain/"+x)
-            shutil.copy(seg_dir+y, "data/train/ytrain/"+y)
+            shutil.copy(slice_dir+x, PATH_TO_TRAIN_FOLDER + "/Xtrain/"+x)
+            shutil.copy(seg_dir+y, PATH_TO_TRAIN_FOLDER + "/ytrain/"+y)
 
 
