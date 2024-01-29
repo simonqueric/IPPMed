@@ -58,7 +58,7 @@ if __name__=="__main__" :
         device = torch.device("cpu")
     
    
-        
+    torch.manual_seed(42) #add seed for the dataloader shuffling    
     batch_size=16
     data_root = "data/train/"
     ippmed_dataset_2D = IPPMedDataset_2D(data_root, transform=rescale_image)
