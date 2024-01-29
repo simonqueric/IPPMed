@@ -16,9 +16,9 @@ def rescale_image(image, a=0, b=1):
 class IPPMedDataset_2D(Dataset):
     def __init__(self, root_dir, transform=rescale_image):
         self.root_dir = root_dir
-        vol_dir = os.path.join(root_dir, 'slice_vol')
+        vol_dir = os.path.join(root_dir, 'Xtrain')
         self.vol_paths = [os.path.join(vol_dir, vol_path) for vol_path in os.listdir(vol_dir)]        
-        seg_dir = os.path.join(root_dir, 'slice_seg')
+        seg_dir = os.path.join(root_dir, 'ytrain')
         self.seg_paths = [os.path.join(seg_dir, seg_path) for seg_path in os.listdir(seg_dir)]        
         self.vol_paths.sort()
         self.seg_paths.sort()
