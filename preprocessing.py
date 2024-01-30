@@ -1,12 +1,12 @@
 import os
 import shutil
 import nibabel as nib
-import tqdm
+from tqdm import tqdm
 import numpy as np
 
 np.random.seed(42)
 
-PATH_TO_TRAIN_FOLDER = "WRITE THE PATH HERE"
+PATH_TO_TRAIN_FOLDER = "../data_challenge/train"
 
 def split_slices(files, dataset_dir, output_dir):
     for filename in tqdm(files):
@@ -51,6 +51,13 @@ output_dir = PATH_TO_TRAIN_FOLDER + "/slice_seg/"
 split_slices(files, dataset_dir, output_dir)
 
 #Remove empty slices randomly for data efficiency 
+
+slice_dir = PATH_TO_TRAIN_FOLDER + "/slice_vol/"
+liste_vol = os.listdir(slice_dir) 
+liste_vol.sort()
+seg_dir = PATH_TO_TRAIN_FOLDER + "/slice_seg/"
+liste_seg = os.listdir(seg_dir) 
+liste_seg.sort()
 
 for i, (x, y) in enumerate(zip(liste_vol, liste_seg)):
     t = nib.load(seg_dir+y).get_fdata()
