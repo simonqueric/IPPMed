@@ -42,7 +42,7 @@ def train(model, loader, optimizer, loss_fn, device, epochs=1):
         #writer.add_scalar("Training loss", epoch_acuracy/len(loader), global_step=epoch)
         if len(losses)>=1 and epoch_loss/len(loader) < min(losses) :
             print("Loss decreased")
-            torch.save(model.state_dict(), file_checkpoint)
+            torch.save(model.state_dict(), file_checkpoint) #save model if loss decreases
         losses.append(epoch_loss/len(loader))
         end = time()
         print("epoch ", epoch, "epoch loss :", epoch_loss/len(loader), "running time :", end-start)
@@ -58,7 +58,7 @@ if __name__=="__main__" :
         device = torch.device("cpu")
     
    
-        
+    torch.manual_seed(42) #add seed for the dataloader shuffling    
     batch_size=16
     data_root = "data/train/"
     ippmed_dataset_2D = IPPMedDataset_2D(data_root, transform=rescale_image)

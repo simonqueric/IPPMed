@@ -27,8 +27,8 @@ model.load_state_dict(torch.load("checkpoints/checkpoint_unet2d_relu_lr=1e-4_res
 # Path to the directory containing the data
 test = "data/test/volume/"
 files = os.listdir(test)
-
 output_dir = "inferences3"
+
 
 for i, file in enumerate(files) : 
     img = nib.load(test+file)
@@ -42,8 +42,8 @@ for i, file in enumerate(files) :
         prediction[:,:,idx] = (torch.sigmoid(pred).squeeze(0, 1).cpu().detach().numpy()>.5)
     #convert prediction to nib image
     prediction = nib.Nifti1Image(prediction, img.affine)
-    #save file as .nii.gz file
     nib.save(prediction, "inferences3/LUNG1-"+file[6:9]+".nii.gz")
+    nib.save(prediction, filepath)
 
     
 
