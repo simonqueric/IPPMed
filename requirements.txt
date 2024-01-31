@@ -1,7 +1,9 @@
-opencv-python
-tqdm
-scikit-learn
-torch
 numpy
 matplotlib
+scikit-learn
+pandas
+opencv-python
+tqdm
+torch
+nibabel
 tensorboard
