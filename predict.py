@@ -1,3 +1,4 @@
+from tqdm import tqdm
 import nibabel as nib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,10 +25,10 @@ model.load_state_dict(torch.load("checkpoints/checkpoint_unet2d_relu_lr=1e-4_res
 
 
 # Path to the directory containing the data
-test = "../data_challenge/test/volume/"
+test = "data/test/volume/"
 files = os.listdir(test)
+output_dir = "inferences3"
 
-output_dir = "./Predictions"
 
 for i, file in enumerate(files) : 
     img = nib.load(test+file)
@@ -35,15 +36,13 @@ for i, file in enumerate(files) :
     x, y, z = img_v.shape
     prediction = np.zeros((x, y, z))
     img_vol = torch.from_numpy(img_v).to(torch.float32).unsqueeze(0).to(device)
-    for idx in range(z):
+    for idx in tqdm(range(z)):
         x = img_vol.unsqueeze(0)[:,:,:,:,idx]
         pred = model(x)
         prediction[:,:,idx] = (torch.sigmoid(pred).squeeze(0, 1).cpu().detach().numpy()>.5)
     #convert prediction to nib image
     prediction = nib.Nifti1Image(prediction, img.affine)
-    #save file as .nii.gz file
-    filename = f"LUNG1-{str(i+1).zfill(3)}.nii.gz"
-    filepath = os.path.join(output_dir, filename)
+    nib.save(prediction, "inferences3/LUNG1-"+file[6:9]+".nii.gz")
     nib.save(prediction, filepath)
 
     
