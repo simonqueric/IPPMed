@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# SLURM options:
-#SBATCH --partition=IPPMED-A40              # Choix de partition (obligatoire)
-#SBATCH --ntasks=1                    # Exécuter une seule tâche
-#SBATCH --time=0-10:00:00     
-#SBATCH --gpus=1	
-
-python3 main.py
