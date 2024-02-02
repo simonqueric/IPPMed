@@ -15,4 +15,4 @@ The model is a classical UNet architecture with ReLU activations. To train the m
 
 To make the prediction, you just need to use the command `python3 predict.py`.
 
-# Modify file paths to use with your environnement
+### Modify file paths to use with your environnement
