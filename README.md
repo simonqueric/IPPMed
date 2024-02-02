@@ -1,6 +1,6 @@
 # Code for IPPMed kaggle competition
 
-IPPMed is a medical data challenge organized by the Institut Polytehchnique de Paris and Télécom alumni.
+IPPMed is a medical data challenge organized by the Institut Polytechnique de Paris and Télécom alumni.
 The topic is finding the best model for the segmentation of lung tumours on CT scans.
 
 ## 1. Preprocessing
@@ -14,3 +14,5 @@ The model is a classical UNet architecture with ReLU activations. To train the m
 ## 3. Prediction
 
 To make the prediction, you just need to use the command `python3 predict.py`.
+
+# Modify file paths to use with your environnement
