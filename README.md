@@ -9,7 +9,7 @@ As a preprocessing step, we divide all the volume and segmentation images into s
 
 ## 2. 2D UNet
 
-The model is a classical UNet architecture with ReLU activations. To train the model, you can either use the command `sbatch train.sh` or `python3 main.py`.
+The model is a classical <a href="https://arxiv.org/abs/1505.04597"> UNet architecture </a> with ReLU activations. We borrow the implementation of the following <a href="https://github.com/nikhilroxtomar/Retina-Blood-Vessel-Segmentation-in-PyTorch/tree/main"> github repo </a>. To train the model, you can either use the command `sbatch train.sh` or `python3 main.py`.
 
 ## 3. Prediction
 
