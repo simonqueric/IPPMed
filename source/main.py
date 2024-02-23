@@ -69,8 +69,6 @@ if __name__=="__main__" :
     print(x.shape)
     file_checkpoint = "checkpoints/checkpoint_unet2d_relu_lr=1e-4_rescale_t=0.5_adam_20_epochs_batch=16_reduce_scheduler.pth"
     print(file_checkpoint)
-    #model = UNet3D(1, 1).to(device)    
-    #print(model(x.to(device)).shape)
     print("Number of batches :", len(data_train_loader))
 
     in_channels = 1  # single-channel input
@@ -95,18 +93,6 @@ if __name__=="__main__" :
     loss_fn = DiceBCELoss() #nn.CrossEntropyLoss(reduction="mean") #DiceBCELoss()
     Loss=0
     accuracies=[]
-    for k in range(2):
-        print("Epoch"+str(k))
-        for i, (x, y) in tqdm(enumerate(data_train_loader)) :
-            y_pred = model(x.to(device))
-        
-
-            optimizer.zero_grad()
-            loss = loss_fn(y_pred, y.to(device))
-            Loss+=loss.item()
-            optimizer.step()
-            #print("TEST")
-        print(Loss/(i+1))
     #print(torch.cuda.memory_summary(device=None, abbreviated=False))
-    #epoch_loss = train(model, data_train_loader, optimizer, loss_fn, device, epochs=num_epochs)
+    epoch_loss = train(model, data_train_loader, optimizer, loss_fn, device, epochs=num_epochs)
  
