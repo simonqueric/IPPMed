@@ -1,8 +1,8 @@
 import nibabel as nib
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 import numpy as np
 import os
-from unet3d import UNet3D, Conv3DBlock, UpConv3DBlock
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,7 +23,7 @@ def train(model, loader, optimizer, loss_fn, device, epochs=1):
     epoch_loss = 0.0
     model.train()
     k=0
-    for epoch in range(epochs) :
+    for epoch in tqdm(range(epochs)) :
         epoch_loss = 0.0
         mean_accuracy = 0.0
         start = time() 
@@ -52,21 +52,21 @@ if __name__=="__main__" :
  
     if torch.cuda.is_available():
         print("cuda available")    
-        device = torch.device("cuda")
+        device = torch.device("cuda:2")
     else:
         print("not available")
         device = torch.device("cpu")
     
    
     torch.manual_seed(42) #add seed for the dataloader shuffling    
-    batch_size=16
-    data_root = "data/train/"
+    batch_size=4
+    data_root = "/home/infres/ext-6398/data_challenge/train/"
     ippmed_dataset_2D = IPPMedDataset_2D(data_root, transform=rescale_image)
     data_train_loader = DataLoader(dataset=ippmed_dataset_2D, batch_size=batch_size, shuffle=True) 
 	
     
     x, y = next(iter(data_train_loader))
-    print(x.max())
+    print(x.shape)
     file_checkpoint = "checkpoints/checkpoint_unet2d_relu_lr=1e-4_rescale_t=0.5_adam_20_epochs_batch=16_reduce_scheduler.pth"
     print(file_checkpoint)
     #model = UNet3D(1, 1).to(device)    
@@ -76,7 +76,8 @@ if __name__=="__main__" :
     in_channels = 1  # single-channel input
     out_channels = 1  # Number of segmentation classes
     model = UNet().to(device)
-    
+    y_pred = model(x.to(device))
+    print(y_pred.shape)    
     
     #for name, param in model.named_parameters():
     #    writer.add_histogram(name, param.clone().cpu().data.numpy(), global_step=0)
@@ -88,12 +89,24 @@ if __name__=="__main__" :
     eps = 1e-8
     #optimizer = torch.optim.adam(model.parameters(), lr=lr)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr) #, betas=(beta_1, beta_2), weight_decay=weight_decay)
-    num_epochs=20
+    num_epochs=2
     #scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=4, verbose=True)
     loss_fn = DiceBCELoss() #nn.CrossEntropyLoss(reduction="mean") #DiceBCELoss()
-    losses=[]
+    Loss=0
     accuracies=[]
+    for k in range(2):
+        print("Epoch"+str(k))
+        for i, (x, y) in tqdm(enumerate(data_train_loader)) :
+            y_pred = model(x.to(device))
+        
+
+            optimizer.zero_grad()
+            loss = loss_fn(y_pred, y.to(device))
+            Loss+=loss.item()
+            optimizer.step()
+            #print("TEST")
+        print(Loss/(i+1))
     #print(torch.cuda.memory_summary(device=None, abbreviated=False))
-    epoch_loss = train(model, data_train_loader, optimizer, loss_fn, device, epochs=num_epochs)
+    #epoch_loss = train(model, data_train_loader, optimizer, loss_fn, device, epochs=num_epochs)
  
